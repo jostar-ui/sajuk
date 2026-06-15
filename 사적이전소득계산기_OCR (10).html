@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>정기지원 사적이전소득 계산기</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --white: #ffffff;
+            --gray-50: #fafaf9;
+            --gray-100: #f5f5f3;
+            --gray-200: #e8e8e4;
+            --gray-300: #d1d1cb;
+            --gray-400: #a8a8a0;
+            --gray-500: #72726b;
+            --gray-600: #4a4a45;
+            --gray-800: #1e1e1b;
+            --blue-50: #eff6ff;
+            --blue-100: #dbeafe;
+            --blue-500: #3b82f6;
+            --blue-600: #2563eb;
+            --blue-700: #1d4ed8;
+            --green-50: #f0fdf4;
+            --green-100: #dcfce7;
+            --green-600: #16a34a;
+            --green-700: #15803d;
+            --red-50: #fef2f2;
+            --red-100: #fee2e2;
+            --red-500: #ef4444;
+            --red-600: #dc2626;
+            --amber-50: #fffbeb;
+            --amber-200: #fde68a;
+            --amber-700: #b45309;
+            --purple-50: #faf5ff;
+            --purple-100: #ede9fe;
+            --purple-600: #7c3aed;
+            --purple-700: #6d28d9;
+            --r4: 4px; --r8: 8px; --r12: 12px; --r16: 16px; --r24: 24px;
+        }
+        body { font-family: 'Noto Sans KR', -apple-system, sans-serif; background: var(--gray-50); color: var(--gray-800); min-height: 100vh; font-size: 13px; line-height: 1.6; }
+
+        /* 상단 바 */
+        .topbar { background: var(--white); border-bottom: 1px solid var(--gray-200); padding: 0 40px; display: flex; align-items: center; height: 56px; }
+        .topbar-title { font-size: 13.5px; font-weight: 600; color: var(--gray-800); letter-spacing: -0.2px; }
+        .topbar-sep { width: 1px; height: 16px; background: var(--gray-200); margin: 0 16px; }
+        .topbar-sub { font-size: 12px; color: var(--gray-400); }
+        .topbar-right { margin-left: auto; display: flex; gap: 8px; }
+
+        /* 메인 레이아웃 */
+        .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 40px 80px; }
+
+        /* 스텝 */
+        .steps { display: flex; align-items: center; margin-bottom: 32px; }
+        .step { display: flex; align-items: center; gap: 8px; padding: 0 20px 0 0; cursor: pointer; }
+        .step-num { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; background: var(--gray-200); color: var(--gray-400); flex-shrink: 0; transition: all 0.2s; }
+        .step.active .step-num { background: var(--gray-800); color: var(--white); }
+        .step.done .step-num { background: var(--blue-600); color: var(--white); }
+        .step-label { font-size: 12px; color: var(--gray-400); font-weight: 500; white-space: nowrap; }
+        .step.active .step-label { color: var(--gray-800); }
+        .step.done .step-label { color: var(--blue-600); }
+        .step-line { flex: 1; height: 1px; background: var(--gray-200); margin: 0 12px; min-width: 24px; }
+        .step-line.done { background: var(--blue-600); }
+
+        /* 콘텐츠 그리드 */
+        .content-grid { display: grid; grid-template-columns: 320px 1fr; gap: 20px; align-items: start; }
+        @media (max-width: 800px) { .content-grid { grid-template-columns: 1fr; } .wrap { padding: 20px 16px 60px; } .topbar { padding: 0 16px; } }
+
+        /* 패널 */
+        .panel { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--r16); }
+        .panel-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; }
+        .panel-head-title { font-size: 12px; font-weight: 600; color: var(--gray-500); letter-spacing: 0.5px; text-transform: uppercase; }
+        .panel-body { padding: 20px; }
+
+        /* 폼 */
+        .field { margin-bottom: 14px; }
+        .field:last-child { margin-bottom: 0; }
+        label { display: block; font-size: 11.5px; font-weight: 500; color: var(--gray-500); margin-bottom: 5px; letter-spacing: 0.2px; }
+        select, input[type="text"], input[type="month"], input[type="password"], textarea {
+            width: 100%; height: 36px; padding: 0 12px; background: var(--gray-50);
+            border: 1px solid var(--gray-200); border-radius: var(--r8); color: var(--gray-800);
+            font-size: 13px; font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s;
+            appearance: none; -webkit-appearance: none;
+        }
+        select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23a8a8a0' d='M5 6L0 0h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-color: var(--gray-50); padding-right: 32px; cursor: pointer; }
+        textarea { height: auto; padding: 10px 12px; min-height: 140px; resize: vertical; line-height: 1.7; font-size: 12px; }
+        select:focus, input:focus, textarea:focus { outline: none; border-color: var(--blue-500); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); background: var(--white); }
+
+        /* 버튼 */
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 34px; padding: 0 14px; border-radius: var(--r8); font-size: 12.5px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.13s; border: 1px solid transparent; white-space: nowrap; }
+        .btn-dark { background: var(--gray-800); color: var(--white); border-color: var(--gray-800); }
+        .btn-dark:hover { background: var(--gray-600); }
+        .btn-outline { background: var(--white); color: var(--gray-600); border-color: var(--gray-200); }
+        .btn-outline:hover { background: var(--gray-50); border-color: var(--gray-300); }
+        .btn-ghost { background: transparent; color: var(--gray-400); border-color: transparent; }
+        .btn-ghost:hover { color: var(--red-500); }
+        .btn-full { width: 100%; }
+        .btn-xs { height: 26px; padding: 0 10px; font-size: 11.5px; border-radius: var(--r4); }
+        .btn-blue { background: var(--blue-600); color: var(--white); border-color: var(--blue-600); }
+        .btn-blue:hover { background: var(--blue-700); }
+        .btn-purple { background: var(--purple-600); color: var(--white); border-color: var(--purple-600); }
+        .btn-purple:hover { background: var(--purple-700); }
+
+        /* 탭 */
+        .tabs { display: flex; border-bottom: 1px solid var(--gray-200); margin: -20px -20px 18px; padding: 0 20px; }
+        .tab { padding: 12px 16px 10px; font-size: 12.5px; font-weight: 500; color: var(--gray-400); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; background: transparent; border-top: none; border-left: none; border-right: none; font-family: inherit; }
+        .tab.active { color: var(--gray-800); border-bottom-color: var(--gray-800); }
+        .tab:hover:not(.active) { color: var(--gray-600); }
+
+        /* 힌트 */
+        .hint { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--r8); padding: 10px 12px; font-size: 11.5px; color: var(--gray-500); line-height: 1.7; margin-bottom: 12px; }
+        .hint code { font-family: 'SF Mono', 'Consolas', monospace; background: var(--gray-200); padding: 1px 5px; border-radius: 3px; font-size: 11px; color: var(--gray-600); }
+
+        /* 퀵액션 */
+        .quick-row { display: flex; align-items: center; gap: 6px; padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--gray-100); }
+        .quick-label { font-size: 11px; color: var(--gray-400); margin-right: 2px; }
+
+        /* 배지 */
+        .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; line-height: 1.5; }
+        .badge-gray { background: var(--gray-100); color: var(--gray-600); }
+        .badge-blue { background: var(--blue-50); color: var(--blue-700); }
+        .badge-green { background: var(--green-50); color: var(--green-600); }
+        .badge-red { background: var(--red-50); color: var(--red-600); }
+        .badge-amber { background: var(--amber-50); color: var(--amber-700); }
+        .badge-purple { background: var(--purple-50); color: var(--purple-600); }
+
+        /* 빈 상태 */
+        .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 56px 24px; color: var(--gray-400); font-size: 12.5px; text-align: center; gap: 8px; }
+        .empty-ring { width: 48px; height: 48px; border-radius: 50%; border: 1.5px dashed var(--gray-300); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 4px; }
+
+        /* 지원 내역 테이블 */
+        .tbl-wrap { border: 1px solid var(--gray-200); border-radius: var(--r12); overflow: hidden; }
+        .tbl-scroll { max-height: 320px; overflow-y: auto; }
+        .tbl-scroll::-webkit-scrollbar { width: 5px; }
+        .tbl-scroll::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 3px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+        thead th { background: var(--gray-50); padding: 9px 12px; text-align: left; font-size: 11px; font-weight: 600; color: var(--gray-400); border-bottom: 1px solid var(--gray-200); letter-spacing: 0.3px; white-space: nowrap; }
+        tbody td { padding: 10px 12px; border-bottom: 1px solid var(--gray-100); color: var(--gray-800); }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover td { background: var(--gray-50); }
+        .num { text-align: right; font-variant-numeric: tabular-nums; }
+        .muted { color: var(--gray-400); }
+
+        /* 결과 패널 */
+        .result-panel { display: none; margin-top: 20px; }
+        .summary-strip { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--r16); padding: 20px; margin-bottom: 16px; }
+        .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--gray-200); border-radius: var(--r12); overflow: hidden; margin-bottom: 20px; }
+        .stat-cell { background: var(--white); padding: 14px 16px; }
+        .stat-cell-label { font-size: 10.5px; font-weight: 600; color: var(--gray-400); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 5px; }
+        .stat-cell-value { font-size: 15px; font-weight: 600; color: var(--gray-800); letter-spacing: -0.3px; }
+        .result-banner { border-radius: var(--r12); padding: 20px 24px; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+        .result-banner.ok { background: var(--green-50); border: 1px solid var(--green-100); }
+        .result-banner.warn { background: var(--red-50); border: 1px solid var(--red-100); }
+        .banner-tag { font-size: 10.5px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 4px; }
+        .result-banner.ok .banner-tag { color: var(--green-600); }
+        .result-banner.warn .banner-tag { color: var(--red-600); }
+        .banner-amount { font-size: 32px; font-weight: 300; letter-spacing: -2px; line-height: 1; }
+        .result-banner.ok .banner-amount { color: var(--green-700); }
+        .result-banner.warn .banner-amount { color: var(--red-600); }
+        .banner-right { text-align: right; }
+        .banner-sub { font-size: 11.5px; color: var(--gray-400); }
+        .banner-annual { font-size: 13px; font-weight: 500; color: var(--gray-600); margin-top: 2px; }
+        .banner-note { font-size: 11.5px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.06); }
+        .result-banner.ok .banner-note { color: var(--green-600); }
+        .result-banner.warn .banner-note { color: var(--red-600); }
+        .reason-panel { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--r16); margin-bottom: 16px; }
+        .reason-body { padding: 16px 20px; font-size: 13px; line-height: 1.9; color: var(--gray-600); }
+        .reason-body strong { color: var(--gray-800); }
+        .supporter-grid { padding: 0 20px 16px; }
+        .supporter-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-100); font-size: 12.5px; }
+        .supporter-item:last-child { border-bottom: none; }
+        .supporter-name { font-weight: 500; color: var(--gray-800); }
+        .supporter-stats { color: var(--gray-400); }
+        .supporter-amount { font-weight: 600; color: var(--gray-800); margin-left: 12px; }
+        .tbl-total td { background: var(--gray-50) !important; font-weight: 600; border-top: 1.5px solid var(--gray-200) !important; }
+        .tbl-monthly td { background: var(--green-50) !important; font-weight: 600; color: var(--green-700) !important; }
+        .copy-ok { font-size: 11.5px; color: var(--green-600); font-weight: 500; display: none; }
+        .sep { height: 1px; background: var(--gray-100); margin: 14px 0; }
+        .hidden { display: none !important; }
+
+        /* OCR 전용 스타일 */
+        .ocr-drop-zone {
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--r12);
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            margin-bottom: 12px;
+        }
+        .ocr-drop-zone:hover, .ocr-drop-zone.drag-over { border-color: var(--purple-600); background: var(--purple-50); }
+        .ocr-drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+        .ocr-status { border-radius: var(--r8); padding: 10px 14px; font-size: 12.5px; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .ocr-status.idle { background: var(--gray-50); border: 1px solid var(--gray-200); color: var(--gray-500); }
+        .ocr-status.loading { background: var(--purple-50); border: 1px solid var(--purple-100); color: var(--purple-600); }
+        .ocr-status.success { background: var(--green-50); border: 1px solid var(--green-100); color: var(--green-600); }
+        .ocr-status.error { background: var(--red-50); border: 1px solid var(--red-100); color: var(--red-600); }
+        .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(124,58,237,0.3); border-top-color: var(--purple-600); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .ocr-preview { max-width: 100%; max-height: 200px; border-radius: var(--r8); border: 1px solid var(--gray-200); margin-bottom: 12px; display: none; }
+        .ocr-result-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .ocr-result-table th { background: var(--gray-50); padding: 7px 10px; text-align: left; font-size: 11px; font-weight: 600; color: var(--gray-400); border-bottom: 1px solid var(--gray-200); }
+        .ocr-result-table td { padding: 8px 10px; border-bottom: 1px solid var(--gray-100); }
+        .ocr-result-table tr:last-child td { border-bottom: none; }
+        .ocr-result-area { display: none; border: 1px solid var(--gray-200); border-radius: var(--r12); overflow: hidden; margin-bottom: 12px; max-height: 280px; overflow-y: auto; }
+        .api-key-row { display: flex; gap: 6px; margin-bottom: 12px; }
+        .api-key-row input { flex: 1; font-size: 12px; height: 34px; }
+        .key-saved { font-size: 11px; color: var(--green-600); display: none; }
+
+        /* 제외 규칙 */
+        .exclude-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+        .exclude-tag { background: var(--red-50); color: var(--red-600); border: 1px solid var(--red-100); border-radius: 20px; padding: 2px 10px; font-size: 11px; display: flex; align-items: center; gap: 4px; }
+        .exclude-tag button { background: none; border: none; color: var(--red-400); cursor: pointer; font-size: 12px; padding: 0; line-height: 1; }
+
+        @media (max-width: 640px) { .stat-row { grid-template-columns: repeat(2, 1fr); } .result-banner { flex-direction: column; align-items: flex-start; } .banner-right { text-align: left; } }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <span class="topbar-title">사적이전소득 계산기</span>
+    <div class="topbar-sep" style="width:1px;height:16px;background:var(--gray-200);margin:0 16px;"></div>
+    <span class="topbar-sub">2022–2026 기준중위소득 자동 적용 · OCR 자동추출</span>
+    <div class="topbar-right">
+        <button class="btn btn-outline btn-xs" onclick="loadExample(1)">예시 1</button>
+        <button class="btn btn-outline btn-xs" onclick="loadExample(2)">예시 2</button>
+        <button class="btn btn-ghost btn-xs" onclick="clearAll()">초기화</button>
+    </div>
+</div>
+
+<div class="wrap">
+    <div class="steps">
+        <div class="step active" id="step1"><div class="step-num">1</div><span class="step-label">가구 설정</span></div>
+        <div class="step-line" id="line1"></div>
+        <div class="step" id="step2"><div class="step-num">2</div><span class="step-label">내역 입력</span></div>
+        <div class="step-line" id="line2"></div>
+        <div class="step" id="step3"><div class="step-num">3</div><span class="step-label">결과 확인</span></div>
+    </div>
+
+    <div class="content-grid">
+        <!-- 좌측 -->
+        <div>
+            <!-- 가구 설정 -->
+            <div class="panel" style="margin-bottom:16px;">
+                <div class="panel-head">
+                    <span class="panel-head-title">가구 설정</span>
+                    <span class="badge badge-gray" id="householdBadge">1인</span>
+                </div>
+                <div class="panel-body">
+                    <div class="field">
+                        <label>가구원수</label>
+                        <select id="householdSize">
+                            <option value="1">1인 가구</option>
+                            <option value="2">2인 가구</option>
+                            <option value="3">3인 가구</option>
+                            <option value="4">4인 가구</option>
+                            <option value="5">5인 가구</option>
+                            <option value="6">6인 가구</option>
+                            <option value="7">7인 가구</option>
+                        </select>
+                    </div>
+                    <div class="hint" id="medianHint">
+                        2026년 기준중위소득: <strong id="medianDisplay">2,564,238원</strong><br>
+                        15% 기준액: <strong id="threshold15Display">384,636원</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 데이터 입력 -->
+            <div class="panel">
+                <div class="panel-head"><span class="panel-head-title">데이터 입력</span></div>
+                <div class="panel-body">
+                    <div class="tabs">
+                        <button class="tab active" onclick="setInputMode('ocr')" id="ocrTab">📄 OCR 자동추출</button>
+                        <button class="tab" onclick="setInputMode('bulk')" id="bulkTab">일괄 입력</button>
+                        <button class="tab" onclick="setInputMode('single')" id="singleTab">개별 입력</button>
+                    </div>
+
+                    <!-- OCR 탭 -->
+                    <div id="ocrSection">
+                        <!-- API 키 -->
+                        <div style="margin-bottom:10px;">
+                            <label>Claude API 키</label>
+                            <div class="api-key-row">
+                                <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." />
+                                <button class="btn btn-outline btn-xs" onclick="saveApiKey()">저장</button>
+                            </div>
+                            <span class="key-saved" id="keySaved">✓ 저장됨</span>
+                            <div style="font-size:11px;color:var(--gray-400);">console.anthropic.com에서 발급 · 이 앱에서만 사용됨</div>
+                        </div>
+
+                        <!-- 모델 선택 -->
+                        <div style="margin-bottom:12px;">
+                            <label>OCR 모델 선택</label>
+                            <select id="modelSelect" style="height:34px;font-size:12.5px;">
+                                <option value="claude-sonnet-4-20250514">Sonnet 4 — 정확도 높음 (건당 약 200원)</option>
+                                <option value="claude-haiku-4-5-20251001">Haiku 4.5 — 빠르고 저렴 (건당 약 70원)</option>
+                            </select>
+                        </div>
+
+                        <!-- 드롭존 -->
+                        <div class="ocr-drop-zone" id="ocrDropZone">
+                            <input type="file" id="ocrFileInput" accept="image/*,.pdf" onchange="handleOcrFile(this.files[0])" />
+                            <div style="font-size:24px;margin-bottom:8px;">📂</div>
+                            <div style="font-weight:500;color:var(--gray-700);font-size:13px;">클릭하거나 파일을 드래그</div>
+                            <div style="font-size:11.5px;color:var(--gray-400);margin-top:4px;">JPG · PNG · PDF 지원</div>
+                        </div>
+
+                        <img id="ocrPreview" class="ocr-preview" alt="미리보기" />
+
+                        <div class="ocr-status idle" id="ocrStatus">
+                            <span>📋</span> API 키와 파일을 업로드하면 자동 분석합니다
+                        </div>
+
+                        <!-- 로우데이터 결과 -->
+                        <div id="ocrResultArea" style="display:none;">
+                            <div style="font-size:11.5px;color:var(--gray-600);margin-bottom:8px;background:var(--blue-50);border:1px solid var(--blue-100);border-radius:var(--r8);padding:10px 12px;line-height:1.8;">
+                                <strong>[전체 로우데이터]</strong> 엑셀 확인용<br>
+                                ① 복사 → 엑셀 붙여넣기 → 검토 후 이름만 남기기<br>
+                                ② 또는 아래 <strong>자동 필터링</strong> 결과 바로 사용
+                            </div>
+
+                            <!-- 전체 로우데이터 -->
+                            <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px;font-weight:500;">▼ 전체 거래내역 (날짜 / 금액 / 거래상대방)</div>
+                            <textarea id="ocrRawOutput" readonly
+                                style="width:100%;height:160px;font-size:11.5px;font-family:'Consolas','Courier New',monospace;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--r8);padding:10px 12px;resize:vertical;color:var(--gray-800);line-height:1.8;"
+                                placeholder="추출 결과가 여기에 표시됩니다"></textarea>
+                            <div style="display:flex;gap:6px;margin-top:6px;margin-bottom:14px;">
+                                <button class="btn btn-outline btn-full" onclick="copyRawOutput()">📋 전체 복사 (엑셀용)</button>
+                            </div>
+
+                            <!-- 이름 자동 필터링 결과 -->
+                            <div id="ocrFilterArea" style="display:none;">
+                                <div style="font-size:11px;color:var(--purple-600);margin-bottom:4px;font-weight:500;">▼ 자동 필터링 — 2~3글자 한글 이름만 추출</div>
+
+                                <!-- 제외 이름 설정 -->
+                                <div style="margin-bottom:8px;">
+                                    <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px;">제외할 이름 (본인·가구원 등)</div>
+                                    <div id="excludeNameTags" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;min-height:4px;"></div>
+                                    <div style="display:flex;gap:6px;">
+                                        <input type="text" id="excludeNameInput" placeholder="이름 입력 후 Enter 또는 추가"
+                                            style="height:30px;font-size:12px;flex:1;"
+                                            onkeydown="if(event.key==='Enter')addExcludeName()" />
+                                        <button class="btn btn-outline btn-xs" onclick="addExcludeName()">추가</button>
+                                    </div>
+                                </div>
+
+                                <textarea id="ocrFilterOutput" readonly
+                                    style="width:100%;height:140px;font-size:11.5px;font-family:'Consolas','Courier New',monospace;background:var(--purple-50);border:1px solid var(--purple-100);border-radius:var(--r8);padding:10px 12px;resize:vertical;color:var(--gray-800);line-height:1.8;"
+                                    placeholder="이름으로 추정되는 항목이 여기에 표시됩니다"></textarea>
+                                <div style="font-size:11px;color:var(--gray-400);margin-top:4px;margin-bottom:6px;">※ 누락된 이름은 위 전체 내역에서 직접 복사해 추가하세요</div>
+                                <div style="display:flex;gap:6px;">
+                                    <button class="btn btn-purple btn-full" onclick="copyFilterOutput()">📋 필터링 결과 복사</button>
+                                    <button class="btn btn-outline" onclick="goToBulkFilter()" style="white-space:nowrap;">일괄입력 →</button>
+                                </div>
+                            </div>
+
+                            <div id="rawCopyOk" style="font-size:11.5px;color:var(--green-600);margin-top:4px;display:none;">✓ 복사됨</div>
+                        </div>
+
+                        <div id="ocrRawBox" style="display:none;background:var(--red-50);border:1px solid var(--red-100);border-radius:var(--r8);padding:10px 12px;font-size:11px;color:var(--red-600);white-space:pre-wrap;word-break:break-all;max-height:160px;overflow-y:auto;margin-top:8px;font-family:monospace;"></div>
+                    </div>
+
+                    <!-- 일괄 입력 -->
+                    <div id="bulkSection" class="hidden">
+                        <div class="hint">
+                            <code>2024-01&nbsp;&nbsp;300000&nbsp;&nbsp;부양의무자A</code> 형식으로 입력<br>
+                            탭·공백 구분, 여러 줄 붙여넣기 가능
+                        </div>
+                        <textarea id="bulkInput" placeholder="2024-01&#9;300000&#9;부양의무자A&#10;2024-02&#9;1,200,000&#9;후원자B"></textarea>
+                        <button class="btn btn-dark btn-full" onclick="processBulkInput()" style="margin-top:10px;">처리하기</button>
+                    </div>
+
+                    <!-- 개별 입력 -->
+                    <div id="singleSection" class="hidden">
+                        <div class="field"><label>입금일자</label><input type="month" id="month"></div>
+                        <div class="field"><label>입금액</label><input type="text" id="amount" placeholder="300,000"></div>
+                        <div class="field"><label>지원자명</label><input type="text" id="supporter" placeholder="이름"></div>
+                        <button class="btn btn-dark btn-full" onclick="addSingleSupport()">추가</button>
+                    </div>
+
+                    <div class="quick-row">
+                        <span class="quick-label">예시</span>
+                        <button class="btn btn-outline btn-xs" onclick="loadExample(1)">예시 1</button>
+                        <button class="btn btn-outline btn-xs" onclick="loadExample(2)">예시 2</button>
+                        <button class="btn btn-ghost btn-xs" onclick="clearAll()" style="margin-left:auto;">초기화</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 우측 -->
+        <div>
+            <div class="panel" id="emptyPanel">
+                <div class="empty">
+                    <div class="empty-ring">📋</div>
+                    <div style="font-weight:500;color:var(--gray-500);">입력 내역이 없습니다</div>
+                    <div>좌측에서 지원 내역을 입력하세요</div>
+                </div>
+            </div>
+
+            <div class="panel" id="listPanel" style="display:none;">
+                <div class="panel-head">
+                    <span class="panel-head-title">지원 내역</span>
+                    <span class="badge badge-blue"><span id="supportCount">0</span>건</span>
+                </div>
+                <div class="panel-body" style="padding:0;">
+                    <div class="tbl-wrap" style="border:none;border-radius:0;">
+                        <div class="tbl-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width:32px;">#</th>
+                                        <th>일자</th>
+                                        <th class="num">금액</th>
+                                        <th>지원자</th>
+                                        <th style="width:40px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="supportTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 결과 -->
+            <div class="result-panel" id="resultSection">
+                <div class="summary-strip">
+                    <div class="stat-row">
+                        <div class="stat-cell"><div class="stat-cell-label">기준중위소득</div><div class="stat-cell-value" id="medianIncome">—</div></div>
+                        <div class="stat-cell"><div class="stat-cell-label">15% 기준액</div><div class="stat-cell-value" id="threshold15">—</div></div>
+                        <div class="stat-cell"><div class="stat-cell-label">지원 횟수</div><div class="stat-cell-value" id="supportCountResult">—</div></div>
+                        <div class="stat-cell"><div class="stat-cell-label">지원 유형</div><div class="stat-cell-value" id="regularStatus">—</div></div>
+                    </div>
+                    <div class="result-banner ok" id="resultBanner">
+                        <div class="banner-left">
+                            <div class="banner-tag" id="bannerTag">월 소득산정액</div>
+                            <div class="banner-amount" id="monthlyIncome">0원</div>
+                            <div class="banner-note" id="resultNote"></div>
+                        </div>
+                        <div class="banner-right">
+                            <div class="banner-sub">연간 반영액</div>
+                            <div class="banner-annual"><span id="annualAmount">0</span>원</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reason-panel">
+                    <div class="panel-head" style="justify-content:space-between;">
+                        <span class="panel-head-title">판정 근거 및 월별 상세 내역</span>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <button class="btn btn-outline btn-xs" onclick="copyTableToClipboard()">전체 복사</button>
+                            <button class="btn btn-outline btn-xs" onclick="copyTableOnly()">월별상세 복사</button>
+                            <span class="copy-ok" id="copyOk">✓ 복사됨</span>
+                        </div>
+                    </div>
+                    <div class="reason-body" id="judgmentReason"></div>
+                    <div class="supporter-grid" id="supporterGrid"></div>
+                    <div style="padding:0 20px 16px;">
+                        <div class="tbl-wrap">
+                            <table id="detailsTable">
+                                <thead>
+                                    <tr>
+                                        <th>일자</th>
+                                        <th class="num">지원총액</th>
+                                        <th class="num">15% 기준액</th>
+                                        <th class="num">15% 초과액</th>
+                                        <th style="text-align:center;">반영</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detailsTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── 기준중위소득 ──
+const medianIncomesByYear = {
+    2022:{1:1944812,2:3260085,3:4194701,4:5121080,5:6024515,6:6907004,7:7780592},
+    2023:{1:2077892,2:3456155,3:4434816,4:5400964,5:6330688,6:7227981,7:8107974},
+    2024:{1:2228445,2:3682609,3:4714657,4:5729913,5:6695735,6:7618369,7:8514944},
+    2025:{1:2392013,2:3932647,3:5033052,4:6145102,5:7170969,6:8107490,7:9011226},
+    2026:{1:2564238,2:4199292,3:5359036,4:6494738,5:7556719,6:8555952,7:9515150}
+};
+
+// 항상 제외할 키워드 (공적이전소득)
+const AUTO_EXCLUDE_KEYWORDS = ['기초연금','국민연금','급여','대체','예금이자','이자','카드캐시백','캐시백','신한카드캐시백','PC신한은행','카드론','ATM'];
+
+let supports = [];
+let excludeNames = []; // 사용자가 추가한 제외 이름
+let ocrRows = []; // OCR 추출 결과 (체크박스 포함)
+let savedApiKey = '';
+
+// ── API 키 ──
+function saveApiKey() {
+    const k = document.getElementById('apiKeyInput').value.trim();
+    if (!k) return;
+    savedApiKey = k;
+    try { localStorage.setItem('spi_api_key', k); } catch(e) {}
+    document.getElementById('keySaved').style.display = 'inline';
+    setTimeout(() => document.getElementById('keySaved').style.display = 'none', 2000);
+}
+
+// ── 제외 이름 ──
+function addExclude() {
+    const input = document.getElementById('excludeInput');
+    const name = input.value.trim();
+    if (!name || excludeNames.includes(name)) { input.value = ''; return; }
+    excludeNames.push(name);
+    input.value = '';
+    renderExcludeTags();
+}
+function removeExclude(name) {
+    excludeNames = excludeNames.filter(n => n !== name);
+    renderExcludeTags();
+}
+function renderExcludeTags() {
+    const container = document.getElementById('excludeTags');
+    container.innerHTML = excludeNames.map(n =>
+        `<span class="exclude-tag">${n}<button onclick="removeExclude('${n}')">×</button></span>`
+    ).join('');
+}
+function isExcluded(name) {
+    if (!name) return false;
+    // 자동 제외 키워드
+    for (const kw of AUTO_EXCLUDE_KEYWORDS) {
+        if (name.includes(kw)) return true;
+    }
+    // 사용자 제외 이름
+    for (const n of excludeNames) {
+        if (name.includes(n) || n.includes(name)) return true;
+    }
+    return false;
+}
+
+// ── OCR ──
+const ocrDrop = document.getElementById('ocrDropZone');
+ocrDrop.addEventListener('dragover', e => { e.preventDefault(); ocrDrop.classList.add('drag-over'); });
+ocrDrop.addEventListener('dragleave', () => ocrDrop.classList.remove('drag-over'));
+ocrDrop.addEventListener('drop', e => {
+    e.preventDefault(); ocrDrop.classList.remove('drag-over');
+    if (e.dataTransfer.files.length) handleOcrFile(e.dataTransfer.files[0]);
+});
+
+function handleOcrFile(file) {
+    if (!file) return;
+    const isImg = file.type.startsWith('image/');
+    const isPdf = file.type === 'application/pdf';
+    if (!isImg && !isPdf) { setOcrStatus('error', 'JPG, PNG, PDF 파일만 지원합니다'); return; }
+
+    const key = savedApiKey || document.getElementById('apiKeyInput').value.trim();
+    if (!key) { setOcrStatus('error', 'API 키를 먼저 입력하고 저장하세요'); return; }
+
+    const preview = document.getElementById('ocrPreview');
+    if (isImg) {
+        const url = URL.createObjectURL(file);
+        preview.src = url; preview.style.display = 'block';
+    } else {
+        preview.style.display = 'none';
+    }
+
+    const reader = new FileReader();
+    reader.onload = e => {
+        const b64 = e.target.result.split(',')[1];
+        // PDF 페이지 수 추정: base64 크기로 대략 계산 (1페이지 ≈ 50~100KB)
+        if (isPdf) {
+            const sizeKB = Math.round(b64.length * 0.75 / 1024);
+            const estPages = Math.round(sizeKB / 70);
+            if (estPages > 50) {
+                const ok = confirm(
+                    '⚠ 파일 크기가 큽니다 (약 ' + estPages + '페이지 추정)\n\n' +
+                    'API 제한상 100페이지까지만 처리 가능하고,\n' +
+                    '페이지가 많을수록 일부 누락될 수 있습니다.\n\n' +
+                    '50페이지 이하로 나눠서 업로드하는 것을 권장합니다.\n\n' +
+                    '그래도 계속 진행하시겠습니까?'
+                );
+                if (!ok) return;
+            }
+        }
+        runOcr(b64, file.type, key);
+    };
+    reader.readAsDataURL(file);
+}
+
+async function runOcr(b64, mediaType, key) {
+    setOcrStatus('loading', 'Claude가 통장 내역을 분석 중입니다... (페이지 수에 따라 1~2분 소요)');
+    document.getElementById('ocrResultArea').style.display = 'none';
+    document.getElementById('ocrRawBox').style.display = 'none';
+
+    const isImg = mediaType.startsWith('image/');
+    const contentBlock = isImg
+        ? { type: 'image', source: { type: 'base64', media_type: mediaType, data: b64 } }
+        : { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } };
+
+    const prompt = `이것은 은행 통장 입출금 거래내역서입니다. 모든 페이지의 모든 거래를 빠짐없이 추출하세요.
+
+[1단계: 문서 구조 파악 — 반드시 먼저 수행]
+헤더 행을 보고 이 통장의 방식을 파악하세요.
+
+■ 방식A: 입금금액 / 출금금액이 별도 컬럼으로 분리 (NH농협 등)
+  - 입금금액 칸에 숫자 있으면 → 양수
+  - 출금금액 칸에 숫자 있으면 → 음수
+
+■ 방식B: 거래금액 하나의 컬럼 + 상태(입금/출금) 컬럼이 별도 (KB국민 등)
+  - 상태 컬럼이 "입금" → 양수
+  - 상태 컬럼이 "출금" → 음수
+  - ※ 거래금액은 항상 양수로 인쇄되므로 반드시 상태 컬럼으로 부호 결정
+
+[2단계: 추출 규칙]
+1. 날짜: YYYYMMDD 형식 (시간 제외)
+2. 금액: 방식A/B에 따라 양수/음수. 숫자만, 쉼표/원 없이
+3. 거래상대방: 적요/거래기록사항/의뢰인등 컬럼값. 비어있으면 거래내용 컬럼값
+
+[중요] 거래상대방 필터링 하지 마세요. 모든 행을 그대로 출력하세요.
+단, 거래상대방이 완전히 비어있는 행은 제외해도 됩니다.
+
+[출력 형식] 탭 구분, 헤더 없이, 설명/마크다운 없이 순수 데이터만:
+YYYYMMDD[TAB]금액[TAB]거래상대방
+
+출력 예시:
+20260415\t300000\t번옥수
+20260413\t-500000\tLGU+인터넷
+20260412\t-300000\t유재용
+20260410\t150000\tKB카드`;
+
+    try {
+        const resp = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': key,
+                'anthropic-version': '2023-06-01',
+                'anthropic-dangerous-direct-browser-access': 'true'
+            },
+            body: JSON.stringify({
+                model: document.getElementById('modelSelect').value,
+                max_tokens: 32000,
+                messages: [{ role: 'user', content: [contentBlock, { type: 'text', text: prompt }] }]
+            })
+        });
+
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            setOcrStatus('error', 'API 오류: ' + (err.error?.message || resp.status));
+            return;
+        }
+
+        const data = await resp.json();
+        const raw = data.content?.find(b => b.type === 'text')?.text || '';
+
+        if (data.stop_reason === 'max_tokens') {
+            setOcrStatus('error', '⚠ 응답이 잘렸습니다. PDF를 절반으로 나눠서 각각 업로드해주세요.');
+            showRawError(raw);
+            return;
+        }
+
+        if (!raw.trim()) {
+            setOcrStatus('error', '추출된 내용이 없습니다. 파일을 확인해주세요.');
+            return;
+        }
+
+        // 탭 구분 줄만 필터링
+        const lines = raw.trim().split('\n').filter(l => {
+            const parts = l.trim().split('\t');
+            return parts.length >= 3 && parts[0].replace(/-/g,'').match(/^\d{6,8}/);
+        });
+
+        if (!lines.length) {
+            setOcrStatus('error', '데이터 파싱 실패 — 아래 원본을 확인하세요');
+            showRawError(raw);
+            return;
+        }
+
+        // YYYYMMDD 정규화 + 사람 이름 추정 필터링
+        const allLines = [];
+        const nameLines = [];
+
+        lines.forEach(l => {
+            const parts = l.trim().split('\t');
+            const dateRaw = parts[0].replace(/-/g,'').trim();
+            const amount = parts[1].trim();
+            const name = parts.slice(2).join(' ').trim();
+            const row = dateRaw + '\t' + amount + '\t' + name;
+            allLines.push(row);
+            // 2~3글자 순수 한글만 = 사람 이름으로 추정
+            if (/^[가-힣]{2,3}$/.test(name) && !excludeNameList.includes(name)) nameLines.push(row);
+        });
+
+        // 전체 로우데이터 출력
+        document.getElementById('ocrRawOutput').value = allLines.join('\n');
+
+        // 필터링된 이름만 별도 표시
+        const filterBox = document.getElementById('ocrFilterOutput');
+        filterBox.value = nameLines.join('\n');
+        document.getElementById('ocrFilterArea').style.display = 'block';
+
+        const total = allLines.length;
+        const nameCount = nameLines.length;
+        setOcrStatus('success', '총 ' + total + '건 추출 — 이름 추정 ' + nameCount + '건 자동 필터링됨');
+        document.getElementById('ocrResultArea').style.display = 'block';
+
+    } catch(e) {
+        setOcrStatus('error', '오류: ' + e.message);
+    }
+}
+
+function showRawError(text) {
+    const box = document.getElementById('ocrRawBox');
+    box.textContent = text ? text.slice(0, 2000) + (text.length > 2000 ? '\n...(생략)' : '') : '(응답 없음)';
+    box.style.display = 'block';
+}
+
+function copyRawOutput() {
+    const ta = document.getElementById('ocrRawOutput');
+    ta.select();
+    document.execCommand('copy');
+    const ok = document.getElementById('rawCopyOk');
+    ok.style.display = 'block';
+    setTimeout(() => ok.style.display = 'none', 2000);
+}
+
+function goToBulk() {
+    const raw = document.getElementById('ocrRawOutput').value;
+    setInputMode('bulk');
+    document.getElementById('bulkInput').value = raw;
+}
+
+// ── 제외 이름 관리 ──
+let excludeNameList = [];
+
+function addExcludeName() {
+    const input = document.getElementById('excludeNameInput');
+    const name = input.value.trim();
+    if (!name || excludeNameList.includes(name)) { input.value = ''; return; }
+    excludeNameList.push(name);
+    input.value = '';
+    renderExcludeNameTags();
+    applyExcludeFilter(); // 이름 추가하면 즉시 재필터링
+}
+
+function removeExcludeName(name) {
+    excludeNameList = excludeNameList.filter(n => n !== name);
+    renderExcludeNameTags();
+    applyExcludeFilter(); // 이름 삭제해도 즉시 재필터링
+}
+
+function renderExcludeNameTags() {
+    const container = document.getElementById('excludeNameTags');
+    if (!container) return;
+    container.innerHTML = excludeNameList.map(n =>
+        `<span style="background:var(--red-50);color:var(--red-600);border:1px solid var(--red-100);border-radius:20px;padding:2px 10px;font-size:11px;display:inline-flex;align-items:center;gap:4px;">
+            ${n}
+            <button onclick="removeExcludeName('${n}')" style="background:none;border:none;color:var(--red-400);cursor:pointer;font-size:13px;padding:0;line-height:1;">×</button>
+        </span>`
+    ).join('');
+}
+
+function applyExcludeFilter() {
+    // 전체 로우데이터에서 다시 필터링
+    const raw = document.getElementById('ocrRawOutput').value;
+    if (!raw) return;
+    const lines = raw.split('\n').filter(l => l.trim());
+    const nameLines = lines.filter(l => {
+        const parts = l.split('\t');
+        if (parts.length < 3) return false;
+        const name = parts.slice(2).join(' ').trim();
+        // 2~3글자 한글 이름 패턴
+        if (!/^[가-힣]{2,3}$/.test(name)) return false;
+        // 제외 이름 체크
+        return !excludeNameList.includes(name);
+    });
+    const filterBox = document.getElementById('ocrFilterOutput');
+    if (filterBox) filterBox.value = nameLines.join('\n');
+    // 상태 메시지 업데이트
+    const total = lines.length;
+    const nameCount = nameLines.length;
+    setOcrStatus('success', '총 ' + total + '건 추출 — 이름 추정 ' + nameCount + '건 (제외 ' + excludeNameList.length + '명 적용)');
+}
+
+function copyFilterOutput() {
+    const ta = document.getElementById('ocrFilterOutput');
+    ta.select();
+    document.execCommand('copy');
+    const ok = document.getElementById('rawCopyOk');
+    ok.style.display = 'block';
+    setTimeout(() => ok.style.display = 'none', 2000);
+}
+
+function goToBulkFilter() {
+    const raw = document.getElementById('ocrFilterOutput').value;
+    setInputMode('bulk');
+    document.getElementById('bulkInput').value = raw;
+}
+
+function setOcrStatus(type, msg) {
+    const el = document.getElementById('ocrStatus');
+    el.className = 'ocr-status ' + type;
+    const icons = { idle: '📋', loading: '', success: '✓', error: '⚠' };
+    const spinner = type === 'loading' ? '<div class="spinner"></div>' : `<span>${icons[type]}</span>`;
+    el.innerHTML = spinner + ' ' + msg;
+}
+
+// ── 입력 모드 전환 ──
+function setInputMode(mode) {
+    ['ocr','bulk','single'].forEach(m => {
+        document.getElementById(m+'Tab').classList.toggle('active', m === mode);
+        document.getElementById(m+'Section').classList.toggle('hidden', m !== mode);
+    });
+}
+function setMode(mode) { setInputMode(mode); } // 하위호환
+
+// ── 기존 기능 ──
+function updateMedianHint() {
+    const size = parseInt(document.getElementById('householdSize').value);
+    const median = medianIncomesByYear[2026][size];
+    const th15 = Math.round(median * 0.15);
+    document.getElementById('medianDisplay').textContent = median.toLocaleString() + '원';
+    document.getElementById('threshold15Display').textContent = th15.toLocaleString() + '원';
+    document.getElementById('householdBadge').textContent = size + '인';
+}
+
+function loadExample(num) {
+    setInputMode('bulk');
+    if (num === 1) {
+        document.getElementById('householdSize').value = '1';
+        document.getElementById('bulkInput').value =
+            '2025-01\t100000\t정기후원자A\n2025-02\t100000\t정기후원자A\n2025-03\t100000\t정기후원자A\n' +
+            '2025-04\t100000\t정기후원자A\n2025-05\t100000\t정기후원자A\n2025-06\t100000\t정기후원자A\n' +
+            '2025-01\t100000\t정기후원자B\n2025-02\t100000\t정기후원자B\n2025-03\t100000\t정기후원자B\n' +
+            '2025-04\t100000\t정기후원자B\n2025-05\t100000\t정기후원자B\n2025-06\t100000\t정기후원자B';
+    } else {
+        document.getElementById('householdSize').value = '2';
+        document.getElementById('bulkInput').value =
+            '2025-01\t300000\t부양의무자A\n2025-02\t300000\t부양의무자A\n' +
+            '2025-03\t200000\t친척B\n2025-04\t650000\t후원자C\n' +
+            '2025-05\t650000\t후원자C\n2025-06\t650000\t후원자C';
+    }
+    updateMedianHint();
+}
+
+function processBulkInput() {
+    const input = document.getElementById('bulkInput').value.trim();
+    if (!input) return;
+    const lines = input.split('\n');
+    const newSupports = [];
+    lines.forEach(function(line) {
+        line = line.trim(); if (!line) return;
+        const dateMatch = line.match(/(\d{8}|\d{4}-\d{2}-\d{2}|\d{4}-\d{2})/);
+        if (!dateMatch) return;
+        let dateStr = dateMatch[0], month = '';
+        if (dateStr.length === 8 && !dateStr.includes('-')) month = dateStr.slice(0,4)+'-'+dateStr.slice(4,6);
+        else if (dateStr.length === 10) month = dateStr.slice(0,7);
+        else month = dateStr;
+        let remaining = line.replace(dateMatch[0], '').trim();
+        const amounts = remaining.match(/-?[\d,]+/g);
+        let amount = 0, amountStr = '';
+        if (amounts) { for (var i=0;i<amounts.length;i++) { const num=parseInt(amounts[i].replace(/,/g,'')); if(Math.abs(num)>=1000){amount=num;amountStr=amounts[i];break;} } }
+        let supporter = remaining;
+        if (amountStr) supporter = supporter.replace(new RegExp(amountStr.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')),'');
+        supporter = supporter.replace(/^-\s*/,'').replace(/[\t,\s]+/g,' ').trim();
+        if (month && amount !== 0 && supporter) newSupports.push({supporter, month, amount});
+    });
+    if (newSupports.length > 0) {
+        supports = supports.concat(newSupports);
+        document.getElementById('bulkInput').value = '';
+        updateDisplay(); calculate();
+    } else { alert('입력 형식을 확인해주세요.\n날짜(YYYY-MM), 금액, 지원자명 순으로 입력하세요.'); }
+}
+
+function addSingleSupport() {
+    const month = document.getElementById('month').value;
+    const amountStr = document.getElementById('amount').value;
+    const supporter = document.getElementById('supporter').value;
+    const amount = parseInt(amountStr.replace(/,/g,''));
+    if (month && !isNaN(amount) && supporter) {
+        supports.push({supporter, month, amount});
+        document.getElementById('month').value = '';
+        document.getElementById('amount').value = '';
+        document.getElementById('supporter').value = '';
+        updateDisplay(); calculate();
+    }
+}
+
+function removeSupport(i) { supports.splice(i,1); updateDisplay(); calculate(); }
+
+function clearAll() {
+    supports = []; ocrRows = [];
+    document.getElementById('bulkInput').value = '';
+    document.getElementById('month').value = '';
+    document.getElementById('amount').value = '';
+    document.getElementById('supporter').value = '';
+    document.getElementById('ocrResultArea').style.display = 'none';
+    document.getElementById('ocrPreview').style.display = 'none';
+    document.getElementById('ocrRawBox').style.display = 'none';
+    setOcrStatus('idle', 'API 키와 파일을 업로드하면 자동 분석합니다');
+    updateDisplay();
+}
+
+function updateSteps(hasList, hasResult) {
+    document.getElementById('step1').className = 'step done';
+    document.getElementById('line1').className = 'step-line' + (hasList ? ' done' : '');
+    document.getElementById('step2').className = 'step ' + (hasList ? 'done' : 'active');
+    document.getElementById('line2').className = 'step-line' + (hasResult ? ' done' : '');
+    document.getElementById('step3').className = 'step ' + (hasResult ? 'done' : (hasList ? 'active' : ''));
+}
+
+function updateDisplay() {
+    const listPanel = document.getElementById('listPanel');
+    const emptyPanel = document.getElementById('emptyPanel');
+    const tbody = document.getElementById('supportTableBody');
+    if (supports.length > 0) {
+        listPanel.style.display = 'block'; emptyPanel.style.display = 'none';
+        document.getElementById('supportCount').textContent = supports.length;
+        var html = '';
+        for (var i=0;i<supports.length;i++) {
+            var s = supports[i];
+            var isNeg = s.amount < 0;
+            var amtHtml = isNeg
+                ? '<span style="color:var(--red-500);font-size:11px;">(출금)</span> <span style="color:var(--red-500);font-weight:600;">'+s.amount.toLocaleString()+'원</span>'
+                : '<span style="font-weight:600;">'+s.amount.toLocaleString()+'원</span>';
+            html += '<tr><td class="muted" style="font-size:11px;">'+(i+1)+'</td><td>'+s.month+'</td><td class="num">'+amtHtml+'</td><td style="font-weight:500;">'+s.supporter+'</td>';
+            html += '<td style="text-align:center;"><button class="btn btn-ghost btn-xs" onclick="removeSupport('+i+')" style="color:var(--gray-300);font-size:14px;height:22px;padding:0 6px;">×</button></td></tr>';
+        }
+        tbody.innerHTML = html;
+        updateSteps(true, false);
+    } else {
+        listPanel.style.display = 'none'; emptyPanel.style.display = 'block';
+        document.getElementById('resultSection').style.display = 'none';
+        updateSteps(false, false);
+    }
+}
+
+function calculate() {
+    if (supports.length === 0) { document.getElementById('resultSection').style.display = 'none'; return; }
+    const size = parseInt(document.getElementById('householdSize').value);
+    const median2026 = medianIncomesByYear[2026][size];
+    const threshold15 = Math.round(median2026 * 0.15);
+    const currentYear = new Date().getFullYear();
+    const currentYearInc = medianIncomesByYear[currentYear] || medianIncomesByYear[2026];
+    const threshold50 = Math.round(currentYearInc[size] * 0.5);
+
+    // 지원자별 그룹
+    const supporterGroups = {};
+    for (var i=0;i<supports.length;i++) {
+        var s = supports[i];
+        if (!supporterGroups[s.supporter]) supporterGroups[s.supporter] = [];
+        supporterGroups[s.supporter].push(s);
+    }
+    // 지원자별 월별 합산
+    const supporterMonthly = {};
+    for (var i=0;i<supports.length;i++) {
+        var s = supports[i]; var mk = s.month.slice(0,7);
+        if (!supporterMonthly[s.supporter]) supporterMonthly[s.supporter] = {};
+        if (!supporterMonthly[s.supporter][mk]) supporterMonthly[s.supporter][mk] = 0;
+        supporterMonthly[s.supporter][mk] += s.amount;
+    }
+    // 월별 합산 (전체)
+    const monthlySupports = {};
+    for (var i=0;i<supports.length;i++) {
+        var s = supports[i]; var mk = s.month.slice(0,7);
+        if (!monthlySupports[mk]) monthlySupports[mk] = 0;
+        monthlySupports[mk] += s.amount;
+    }
+    // 양수 월만 횟수 카운트
+    const monthlyPos = {};
+    for (var m in monthlySupports) if (monthlySupports[m] > 0) monthlyPos[m] = monthlySupports[m];
+    const supportOccurrences = Object.keys(monthlyPos).length;
+
+    let totalExcess = 0;
+    const monthlyDetails = [];
+    for (var m in monthlySupports) {
+        var dispAmt = monthlySupports[m];
+        var calcAmt = monthlyPos[m] || 0;
+        var year = parseInt(m.slice(0,4));
+        var yInc = medianIncomesByYear[year] || medianIncomesByYear[2026];
+        var yMedian = yInc[size];
+        var yTh15 = Math.round(yMedian * 0.15);
+        var excess = calcAmt > 0 ? Math.max(0, calcAmt - yTh15) : 0;
+        if (calcAmt > 0) totalExcess += excess;
+        monthlyDetails.push({month:m, amount:dispAmt, calcAmount:calcAmt, threshold15:yTh15, excess});
+    }
+
+    let isRegular = false, reflectedAmount = 0, monthlyIncome = 0;
+    if (supportOccurrences >= 6) {
+        isRegular = true; reflectedAmount = totalExcess; monthlyIncome = Math.floor(reflectedAmount / 12);
+    } else {
+        if (totalExcess > threshold50) { reflectedAmount = totalExcess - threshold50; monthlyIncome = Math.floor(reflectedAmount / 12); }
+    }
+
+    document.getElementById('resultSection').style.display = 'block';
+    document.getElementById('medianIncome').textContent = median2026.toLocaleString() + '원';
+    document.getElementById('threshold15').textContent = threshold15.toLocaleString() + '원';
+    document.getElementById('supportCountResult').textContent = supportOccurrences + '회';
+    var regEl = document.getElementById('regularStatus');
+    regEl.innerHTML = isRegular ? '<span class="badge badge-red">정기지원</span>' : '<span class="badge badge-green">비정기지원</span>';
+    document.getElementById('annualAmount').textContent = reflectedAmount.toLocaleString();
+    document.getElementById('monthlyIncome').textContent = monthlyIncome.toLocaleString() + '원';
+    var banner = document.getElementById('resultBanner');
+    banner.className = 'result-banner ' + (monthlyIncome > 0 ? 'warn' : 'ok');
+    document.getElementById('resultNote').textContent = monthlyIncome > 0 ? '⚠ 사적이전소득으로 반영됩니다' : '✓ 사적이전소득으로 반영되지 않습니다';
+
+    var reason = '';
+    if (isRegular) {
+        reason = '최근 1년간 <strong>'+supportOccurrences+'회 지원</strong> (6회 이상)으로 <strong>정기지원 사적이전소득</strong>에 해당합니다.';
+    } else {
+        reason = '최근 1년간 <strong>'+supportOccurrences+'회 지원</strong> (6회 미만)으로 비정기지원에 해당합니다.<br>';
+        if (reflectedAmount > 0) {
+            reason += '15% 초과 총액 <strong>'+totalExcess.toLocaleString()+'원</strong>이 기준중위소득 50% (<strong>'+threshold50.toLocaleString()+'원</strong>)를 초과하여 전액 반영합니다.';
+        } else {
+            reason += '15% 초과 총액 <strong>'+totalExcess.toLocaleString()+'원</strong>이 기준중위소득 50% (<strong>'+threshold50.toLocaleString()+'원</strong>) 이하로 미반영합니다.';
+        }
+    }
+    document.getElementById('judgmentReason').innerHTML = reason;
+
+    var suppHtml = '';
+    for (var sup in supporterGroups) {
+        var grp = supporterGroups[sup];
+        var total = grp.reduce(function(a,b){return a+b.amount;},0);
+        suppHtml += '<div class="supporter-item"><span class="supporter-name">'+sup+'</span>';
+        suppHtml += '<div style="display:flex;align-items:center;gap:8px;"><span class="supporter-stats">'+grp.length+'회</span>';
+        suppHtml += '<span class="supporter-amount">'+total.toLocaleString()+'원</span></div></div>';
+    }
+    document.getElementById('supporterGrid').innerHTML = suppHtml;
+
+    monthlyDetails.sort(function(a,b){return a.month.localeCompare(b.month);});
+    var detHtml = '', totPos = 0, totEx = 0;
+    for (var j=0;j<monthlyDetails.length;j++) {
+        var d = monthlyDetails[j];
+        if (d.calcAmount > 0) totPos += d.calcAmount;
+        totEx += d.excess;
+        var supList = [];
+        for (var sup in supporterMonthly) {
+            if (supporterMonthly[sup][d.month] && supporterMonthly[sup][d.month] !== 0)
+                supList.push(sup+': '+supporterMonthly[sup][d.month].toLocaleString()+'원');
+        }
+        var amtStyle = d.amount < 0 ? 'color:var(--red-500);' : '';
+        var amtTxt = d.amount < 0 ? '(상계) '+d.amount.toLocaleString()+'원' : d.amount.toLocaleString()+'원';
+        var subTxt = supList.length > 0 ? '<br><span style="font-size:11px;color:var(--gray-400);">('+supList.join(', ')+')</span>' : '';
+        detHtml += '<tr><td>'+d.month+'</td><td class="num" style="'+amtStyle+'">'+amtTxt+subTxt+'</td>';
+        detHtml += '<td class="num muted">'+d.threshold15.toLocaleString()+'원</td>';
+        detHtml += '<td class="num" style="'+(d.excess>0?'color:var(--red-500);font-weight:600;':'color:var(--gray-300);')+'">'+d.excess.toLocaleString()+'원</td>';
+        detHtml += '<td style="text-align:center;">'+(d.excess>0?'<span style="color:var(--red-500);font-weight:700;font-size:12px;">✓</span>':'<span style="color:var(--gray-200);">—</span>')+'</td></tr>';
+    }
+    detHtml += '<tr class="tbl-total"><td>합계</td><td class="num">'+totPos.toLocaleString()+'원</td><td class="num muted">—</td><td class="num" style="color:var(--red-500);">'+totEx.toLocaleString()+'원</td><td></td></tr>';
+    if (!isRegular && reflectedAmount > 0) {
+        detHtml += '<tr><td colspan="5" style="padding:10px 12px;font-size:12px;color:var(--gray-600);line-height:2.0;background:var(--amber-50);border-top:1px solid var(--amber-200);">';
+        detHtml += '15% 초과분 합산 '+totalExcess.toLocaleString()+'원이 중위소득 50% 기준 '+threshold50.toLocaleString()+'원을 '+(totalExcess-threshold50).toLocaleString()+'원 초과<br>';
+        detHtml += '반영 총 금액: '+totalExcess.toLocaleString()+' - '+threshold50.toLocaleString()+' = '+reflectedAmount.toLocaleString()+'원';
+        detHtml += '</td></tr>';
+    }
+    detHtml += '<tr class="tbl-monthly"><td colspan="3">월 소득산정액 (연간 ÷ 12)</td><td class="num">'+Math.floor(reflectedAmount/12).toLocaleString()+'원</td><td></td></tr>';
+
+    var calcDesc = '';
+    if (isRegular) {
+        calcDesc += '① 지원횟수 '+supportOccurrences+'회 → 정기지원 (6회 이상)<br>';
+        calcDesc += '② 15% 초과분 합산: '+totalExcess.toLocaleString()+'원 → 전액 반영<br>';
+        calcDesc += '③ 월 소득산정액: '+totalExcess.toLocaleString()+' ÷ 12 = '+Math.floor(reflectedAmount/12).toLocaleString()+'원';
+    } else {
+        calcDesc += '① 지원횟수 '+supportOccurrences+'회 → 비정기지원 (6회 미만)<br>';
+        calcDesc += '② 15% 초과분 합산: '+totalExcess.toLocaleString()+'원<br>';
+        calcDesc += '③ 중위소득 50% 기준: '+threshold50.toLocaleString()+'원<br>';
+        if (reflectedAmount > 0) {
+            calcDesc += '④ 50% 기준 초과: '+totalExcess.toLocaleString()+' > '+threshold50.toLocaleString()+' → 초과<br>';
+            calcDesc += '⑤ 반영 총 금액: '+totalExcess.toLocaleString()+' - '+threshold50.toLocaleString()+' = '+reflectedAmount.toLocaleString()+'원<br>';
+            calcDesc += '⑥ 월 소득산정액: '+reflectedAmount.toLocaleString()+' ÷ 12 = '+Math.floor(reflectedAmount/12).toLocaleString()+'원';
+        } else {
+            calcDesc += '④ '+totalExcess.toLocaleString()+' ≤ '+threshold50.toLocaleString()+' → 미반영 (0원)';
+        }
+    }
+    detHtml += '<tr><td colspan="5" style="background:var(--blue-50);padding:12px 16px;font-size:12px;color:var(--blue-700);line-height:2.0;border-top:1px solid var(--blue-100);">'+calcDesc+'</td></tr>';
+    document.getElementById('detailsTableBody').innerHTML = detHtml;
+    updateSteps(true, true);
+}
+
+// ── 복사 기능 ──
+function copyTableOnly() {
+    var size = parseInt(document.getElementById('householdSize').value);
+    var currentYear = new Date().getFullYear();
+    var currentYearInc = medianIncomesByYear[currentYear] || medianIncomesByYear[2026];
+    var threshold50val = Math.round(currentYearInc[size] * 0.5);
+    var annualAmountVal = parseInt(document.getElementById('annualAmount').textContent.replace(/,/g,''));
+    var monthlyIncomeVal = parseInt(document.getElementById('monthlyIncome').textContent.replace(/[,원]/g,''));
+    var supportOccurrencesVal = parseInt(document.getElementById('supportCountResult').textContent.replace('회',''));
+    var isRegularVal = supportOccurrencesVal >= 6;
+    var totalExcessForCopy = isRegularVal ? annualAmountVal : annualAmountVal + threshold50val;
+    var table = document.getElementById('detailsTable');
+    var text = '';
+    var rows = table.querySelectorAll('tr');
+    for (var i=0;i<rows.length;i++) {
+        var cells = rows[i].querySelectorAll('th, td');
+        if (cells.length === 1) continue;
+        var row = [];
+        for (var j=0;j<cells.length;j++) {
+            var t = cells[j].textContent.trim().replace(/\n/g,' ');
+            if (j===0 && t.match(/^\d{4}-\d{2}$/)) { var p=t.split('-'); t=p[0]+'년 '+parseInt(p[1])+'월'; }
+            row.push(t);
+        }
+        text += row.join('\t') + '\n';
+    }
+    var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    var ok = document.getElementById('copyOk'); ok.style.display = 'inline'; setTimeout(function(){ ok.style.display='none'; }, 2500);
+}
+
+function copyTableToClipboard() {
+    var size = parseInt(document.getElementById('householdSize').value);
+    var median2026 = medianIncomesByYear[2026][size];
+    var threshold15val = Math.round(median2026 * 0.15);
+    var currentYear = new Date().getFullYear();
+    var currentYearInc = medianIncomesByYear[currentYear] || medianIncomesByYear[2026];
+    var threshold50val = Math.round(currentYearInc[size] * 0.5);
+    var supportOccurrencesVal = document.getElementById('supportCountResult').textContent.replace('회','');
+    var isRegularVal = parseInt(supportOccurrencesVal) >= 6;
+    var monthlyIncomeVal = document.getElementById('monthlyIncome').textContent.replace(/[,원]/g,'');
+    var annualAmountVal = document.getElementById('annualAmount').textContent.replace(/,/g,'');
+    var reasonText = document.getElementById('judgmentReason').innerText;
+    var suppItems = document.querySelectorAll('.supporter-item');
+    var suppText = '';
+    suppItems.forEach(function(item) {
+        suppText += item.querySelector('.supporter-name').textContent.trim()+'\t'+item.querySelector('.supporter-stats').textContent.trim()+'\t'+item.querySelector('.supporter-amount').textContent.trim()+'\n';
+    });
+    var table = document.getElementById('detailsTable');
+    var tableText = '';
+    var rows = table.querySelectorAll('tr');
+    for (var i=0;i<rows.length;i++) {
+        var cells = rows[i].querySelectorAll('th, td');
+        if (cells.length === 1) continue;
+        var row = [];
+        for (var j=0;j<cells.length;j++) {
+            var t = cells[j].textContent.trim().replace(/\n/g,' ');
+            if (j===0 && t.match(/^\d{4}-\d{2}$/)) { var p=t.split('-'); t=p[0]+'년 '+parseInt(p[1])+'월'; }
+            row.push(t);
+        }
+        tableText += row.join('\t') + '\n';
+    }
+    var calcText = '';
+    calcText += '① 기준중위소득 ('+size+'인가구 '+currentYear+'년): '+median2026.toLocaleString()+'원\n';
+    calcText += '② 15% 기준액: '+threshold15val.toLocaleString()+'원\n';
+    calcText += '③ 50% 기준액: '+threshold50val.toLocaleString()+'원\n';
+    calcText += '④ 지원횟수: '+supportOccurrencesVal+'회 → '+(isRegularVal?'정기지원 (6회 이상)':'비정기지원 (6회 미만)')+'\n';
+    var text = '[판정 근거]\n'+reasonText+'\n\n[지원자별 요약]\n'+suppText+'\n[월별 상세]\n'+tableText+'\n[계산 과정]\n'+calcText;
+    var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    var ok = document.getElementById('copyOk'); ok.style.display = 'inline'; setTimeout(function(){ ok.style.display='none'; }, 2500);
+}
+
+// 저장된 API 키 불러오기
+try {
+    const savedKey = localStorage.getItem('spi_api_key');
+    if (savedKey) {
+        savedApiKey = savedKey;
+        document.getElementById('apiKeyInput').value = savedKey;
+        document.getElementById('keySaved').style.display = 'inline';
+    }
+} catch(e) {}
+
+document.getElementById('householdSize').addEventListener('change', function() { updateMedianHint(); calculate(); });
+updateMedianHint();
+</script>
+</body>
+</html>
